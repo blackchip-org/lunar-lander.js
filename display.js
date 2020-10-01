@@ -3,7 +3,7 @@ var createDisplay = function(options) {
 
     options = options || {};
     var self = {};
-    
+
     var canvasId = options.id || "display";
 
     var cols = options.cols || 80;
@@ -13,8 +13,8 @@ var createDisplay = function(options) {
     var font = options.font || "monospace";
     var fontSize = options.fontSize || 8;
     var charWidth = options.charWidth || fontSize;
-    var charHeight = options.charHeight || fontSize; 
-    var baselineOffset = options.baselineOffset || 0; 
+    var charHeight = options.charHeight || fontSize;
+    var baselineOffset = options.baselineOffset || 0;
     var scale = options.scale || 1;
 
     var displayWidth = (charWidth * cols * scale) + (padding * 2);
@@ -190,7 +190,7 @@ var createDisplay = function(options) {
         g.fillRect(sx, sy1, charWidth * scale, charHeight * scale);
 
         g.fillStyle = cell.fgColor;
-        g.fillText(cell.text, sx, sy2 - (baselineOffset * scale)); 
+        g.fillText(cell.text, sx, sy2 - (baselineOffset * scale));
     };
 
     var renderCursor = function(time) {
@@ -208,7 +208,7 @@ var createDisplay = function(options) {
         }
         var cell = self.buffer[self.x][self.y];
         renderCell(self.x, self.y, {
-            text: cell.text, 
+            text: cell.text,
             fgColor: cell.bgColor,
             bgColor: cell.fgColor
         });
@@ -229,7 +229,7 @@ var createDisplay = function(options) {
         g.fillRect(0, 0, displayWidth, displayHeight);
 
         var scaledFontSize = fontSize * scale;
-        g.font = scaledFontSize + "px " + font; 
+        g.font = scaledFontSize + "px " + font;
         for (var x = 0; x < cols; x++) {
             for (var y = 0; y < rows; y++) {
                 renderCell(x, y, self.buffer[x][y]);
@@ -270,7 +270,7 @@ var createDisplay = function(options) {
     self.right = function() {
         self.x += 1;
         if (self.x >= cols) {
-            self.x = 0; 
+            self.x = 0;
             if (self.y === rows - 1) {
                 self.scroll();
             } else {

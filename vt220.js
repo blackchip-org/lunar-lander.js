@@ -13,26 +13,25 @@ window.onload = function() {
         baselineOffset: 3,
         border: 50,
         borderColor: "#444",
-        borderRadius: 20
+        borderRadius: 20,
+        caps: true
     });
 
     let output = {
-        println: display.println, 
+        println: display.println,
         print: display.print
     }
 
-    let exec = lunarLander(output) 
+    let exec = lunarLander(output)
 
     let process = function() {
-        console.log('EXEC')
-        result = exec.next() 
+        result = exec.next()
         if (result.done) {
-            return 
+            return
         }
         display.input((line) => {
-            console.log('*** INPUT', line) 
             result.value.input = line
-            process() 
+            process()
         })
     }
 

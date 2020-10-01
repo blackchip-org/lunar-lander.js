@@ -6,8 +6,8 @@ function *lunarLander(out) {
         print: (x) => process.stdout.write(x)
     }
 
-    // external process sets this value when input is required from 
-    // the user 
+    // external process sets this value when input is required from
+    // the user
     let result = {
         input: ''
     };
@@ -24,34 +24,35 @@ function *lunarLander(out) {
     // The % operator
     let fmt = {
         // total number of digits to display
-        total: 8, 
+        total: 8,
         // places after decimal point
         places: 4
     }
 
     let exec = 0
+    let done = false
 
     function line(num, rem, fn) {
         lines[num] = code.length
-        code.push({ num, rem, fn })   
+        code.push({ num, rem, fn })
     }
 
     function* do_(start, end) {
+        let prev = pc
         goto_(start)
-        while (true) {  
+        while (!done) {
             let op = code[pc]
+            let execLineNum = op.num
             if (exec > 1000) {
                 throw new Error(`loop detected: ${JSON.stringify(op, null, 2)}`)
             }
-            debug()
-            if (Number.isNaN(t)) {
-                throw new Error('NAN')
-            }
-            console.log(JSON.stringify(op, null, 2))
+            // debug()
+            // console.log(JSON.stringify(op, null, 2))
             exec++
             pc++
             yield* op.fn()
-            if (op.num === end || pc === code.length) {
+            if (execLineNum === end) {
+                pc = prev
                 break
             }
         }
@@ -63,7 +64,7 @@ function *lunarLander(out) {
     }
 
     function fsqrt(x) {
-        return Math.sqrt(x) 
+        return Math.sqrt(x)
     }
 
     function goto_(num) {
@@ -73,33 +74,50 @@ function *lunarLander(out) {
         pc = lines[num]
     }
 
-    function if_(expr, lt, eq, gt) {
-        if (expr < 0 && lt) {
-            goto_(lt)
-        } else if (expr > 0 && gt) {
-            goto_(gt)
-        } else if (eq) {
-            goto_(eq)
-        }
-    }
-
     function type(v) {
-        let s = v.toFixed(fmt.places) 
+        let s = v.toFixed(fmt.places)
         out.print(s.toString().padStart(fmt.total + 1, " "))
     }
 
-    let a = 0
+    function param(name) {
+        let params = new URLSearchParams(window.location.search);
+        let str = params.get(name)
+        if (str) {
+            return Number.parseFloat(str)
+        }
+        return 0
+    }
+
+    //https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
+    // Global variables
+    //
+    // A - Altitude (miles)
+    // G - Gravity
+    // I - Intermediate altitude (miles)
+    // J - Intermediate velocity (miles/sec)
+    // K - Fuel rate (lbs/sec)
+    // L - Elapsed time (sec)
+    // M - Total weight (lbs)
+    // N - Empty weight (lbs, Note: M - N is remaining fuel weight)
+    // S - Time elapsed in current 10-second turn (sec)
+    // T - Time remaining in current 10-second turn (sec)
+    // V - Downward speed (miles/sec)
+    // W - Temporary working variable
+    // Z - Thrust per pound of fuel burned
+    let a = param("a")
     let g = 0
     let i = 0
     let j = 0
     let k = 0
-    let l = 0 
-    let m = 0
+    let l = param("l")
+    let m = 16500 + param("mn")
     let n = 0
+    let p = '' // try again?
     let s = 0
     let t = 0
-    let v = 0 
-    let z = 0 
+    let v = param("v"); if (v) { v = v / 3600 }
+    let w = 0
+    let z = 0
 
     function debug() {
         let vars = {a, g, i, j, k, l, m, n, s, t, v, z}
@@ -107,13 +125,13 @@ function *lunarLander(out) {
     }
 
     line(
-        "01.04", 
+        "01.04",
         'T "CONTROL CALLING LUNAR MODULE. MANUAL CONTROL IS NECESSARY"!',
-        function* () { 
+        function* () {
             out.println("CONTROL CALLING LUNAR MODULE. MANUAL CONTROL IS NECESSARY")
         }
     )
-    
+
     line(
         "01.06",
         'T "YOU MAY RESET FUEL RATE K EACH 10 SECS TO 0 OR ANY VALUE"!',
@@ -121,7 +139,7 @@ function *lunarLander(out) {
             out.println("YOU MAY RESET FUEL RATE K EACH 10 SECS TO 0 OR ANY VALUE")
         }
     )
-    
+
     line(
         "01.08",
         'T "BETWEEN 8 & 200 LBS/SEC. YOU\'VE 16000 LBS FUEL. ESTIMATED"!',
@@ -144,37 +162,37 @@ function *lunarLander(out) {
         function* () {
             out.println("FIRST RADAR CHECK COMING UP")
             out.println()
-            out.println() 
-        }
-    )
-
-    line(   
-        "01.30",
-        'T "COMMENCE LANDING PROCEDURE"!"TIME,SECS   ALTITUDE,"', 
-        function* () {
-            out.println("COMMENCE LANDING PROCEDURE")
-            out.print("TIME,SECS   ALTITUDE,")        
+            out.println()
         }
     )
 
     line(
-        "01.40", 
-        'T "MILES+FEET   VELOCITY,MPH   FUEL,LBS   FUEL RATE"!', 
+        "01.30",
+        'T "COMMENCE LANDING PROCEDURE"!"TIME,SECS   ALTITUDE,"',
+        function* () {
+            out.println("COMMENCE LANDING PROCEDURE")
+            out.print("TIME,SECS   ALTITUDE,")
+        }
+    )
+
+    line(
+        "01.40",
+        'T "MILES+FEET   VELOCITY,MPH   FUEL,LBS   FUEL RATE"!',
         function* () {
             out.println("MILES+FEET   VELOCITY,MPH   FUEL,LBS   FUEL RATE")
         }
     )
 
     line(
-        "01.50", 
+        "01.50",
         'S A=120;S V=1;S M=32500;S N=16500;S G=.001;S Z=1.8',
         function* () {
-            a = 120 
-            v = 1
-            m = 32500
+            a = a || 120
+            v = v || 1
+            m = m || 32500
             n = 16500
             g = .001
-            z = 1.8         
+            z = 1.8
         }
     )
 
@@ -185,9 +203,9 @@ function *lunarLander(out) {
             out.print("    ")
             fmt.total = 3
             fmt.places = 0
-            type(l) 
+            type(l)
             out.print("           ")
-            type(fitr(a)) 
+            type(fitr(a))
             out.print("  ")
             fmt.total = 4
             type(5280 * (a - fitr(a)))
@@ -198,13 +216,13 @@ function *lunarLander(out) {
         "02.20",
         'T %6.02,"       ",3600*V,"    ",%6.01,M-N,"      K=";A K;S T=10',
         function* () {
-            fmt.total = 6 
-            fmt.places = 2 
+            fmt.total = 6
+            fmt.places = 2
             out.print("        ")
             type(3600 * v)
             out.print("     ")
-            fmt.total = 6 
-            fmt.places = 1 
+            fmt.total = 6
+            fmt.places = 1
             type(m - n)
             out.print("      K=:")
             yield result
@@ -217,11 +235,17 @@ function *lunarLander(out) {
         "02.70",
         'T %7.02;I (200-K)2.72;I (8-K)3.1,3.1;I (K)2.72,3.1',
         function* () {
-            fmt.total = 7 
-            fmt.places = 2 
-            if_(200 - k, "02.72")
-            if_(8 - k, "03.10", "03.10")
-            if_(k, "02.72", "03.10")
+            fmt.total = 7
+            fmt.places = 2
+            if (200 - k < 0) {
+                goto_("02.72")
+            } else if (8 - k <= 0 ) {
+                goto_("03.10")
+            } else if ( k < 0 ) {
+                goto_("02.72")
+             } else if ( k == 0 ) {
+                goto_("03.10")
+             }
         }
     )
 
@@ -242,7 +266,7 @@ function *lunarLander(out) {
         function* () {
             out.print("K=")
             yield result
-            k = Number.passeFloat(result.input)
+            k = Number.parseFloat(result.input)
             goto_("02.70")
         }
     )
@@ -251,9 +275,13 @@ function *lunarLander(out) {
         "03.10",
         'I (M-N-.001)4.1;I (T-.001)2.1;S S=T',
         function* () {
-            if_(m-n-.001, "04.10")
-            if_(t-.001, "02.10")
-            s = t
+            if (m-n-.001 < 0) {
+                goto_("04.10")
+            } else if (t-.001 < 0) {
+                goto_("02.10")
+            } else {
+                s = t
+            }
         }
     )
 
@@ -261,25 +289,32 @@ function *lunarLander(out) {
         "03.40",
         'I ((N+S*K)-M)3.5,3.5;S S=(M-N)/K',
         function* () {
-            if_((n+s*k)-m, "03.50", "03.50")
-            s = (m-n)/k
+            if ((n+s*k)-m <= 0) {
+                goto_("03.50")
+            } else {
+                s = (m-n)/k
+            }
         }
     )
 
     line(
         "03.50",
-        'D 9;I (I)7.1,7.1;I (V)3.8,3.8;I (J)8.1', 
+        'D 9;I (I)7.1,7.1;I (V)3.8,3.8;I (J)8.1',
         function* () {
-            yield* do_("09.10", "09.14")
-            if_(i, "07.10", "07.10")
-            if_(i, v, "03.80", "03.80")
-            if_(j, "08.10")
+            yield* do_("09.10", "09.40")
+            if (i <= 0) {
+                goto_("07.10")
+            } else if (v <= 0) {
+                goto_("03.80")
+            } else if (j < 0) {
+                goto_("08.10")
+            }
         }
     )
 
     line(
         "03.80",
-        'D 6;G 3.1', 
+        'D 6;G 3.1',
         function* () {
             yield* do_("06.10", "06.10")
             goto_("03.10")
@@ -288,19 +323,19 @@ function *lunarLander(out) {
 
     line(
         "04.10",
-        'T "FUEL OUT AT",L," SECS"!', 
+        'T "FUEL OUT AT",L," SECS"!',
         function* () {
             out.print("FUEL OUT AT")
-            type(l) 
+            type(l)
             out.println(" SECS")
         }
     )
 
     line(
         "04.40",
-        'S S=(FSQT(V*V+2*A*G)-V)/G;S V=V+G*S;S L=L+S', 
+        'S S=(FSQT(V*V+2*A*G)-V)/G;S V=V+G*S;S L=L+S',
         function* () {
-            s = (fsqrt(v*v+2*a*h)-v)/h
+            s = (fsqrt(v*v+2*a*g)-v)/g
             v = v+g*s
             l = l+s
         }
@@ -311,13 +346,147 @@ function *lunarLander(out) {
         'T "ON THE MOON AT",L," SECS"!;S W=3600*V',
         function* () {
             out.print("ON THE MOON AT")
-            type(l) 
+            type(l)
             out.println(" SECS")
             w = 3600*v
         }
     )
 
-    // .....
+    line(
+        "05.20",
+        'T "IMPACT VELOCITY OF"W," M.P.H."!"FUEL LEFT:"M-N," LBS"!',
+        function* () {
+            out.print("IMPACT VELOCITY OF")
+            type(w)
+            out.println(" M.P.H.")
+            out.print("FUEL LEFT:")
+            type(m-n)
+            out.println(" LBS")
+        }
+    )
+
+    line(
+        "05.40",
+        'I (1-W)5.5,5.5;T "PERFECT LANDING !-(LUCKY)"!;G 5.9',
+        function* () {
+            if (1-w <= 0) {
+                goto_("05.50")
+            } else {
+                out.println("PERFECT LANDING !-(LUCKY)")
+                goto_("05.90")
+            }
+        }
+    )
+
+    line(
+        "05.50",
+        'I (10-W)5.6,5.6;T "GOOD LANDING-(COULD BE BETTER)";G 5.9',
+        function* () {
+            if (10-w <= 0) {
+                goto_("05.60")
+            } else {
+                out.println("GOOD LANDING-(COULD BE BETTER)")
+                goto_("05.90")
+            }
+        }
+    )
+
+    line(
+        "05.60",
+        'I (22-W)5.7,5.7;T "CONGRATULATIONS ON A POOR LANDING";G 5.9',
+        function* () {
+            if (22-w <= 0) {
+                goto_("05.70")
+            } else {
+                out.println("CONGRATULATIONS ON A POOR LANDING")
+                goto_("05.90")
+            }
+        }
+    )
+
+    line(
+        "05.70",
+        'I (40-W)5.81,5.81;T "CRAFT DAMAGE. GOOD LUCK";G 5.9',
+        function* () {
+            if (40-w <= 0) {
+                goto_("05.81")
+            } else {
+                out.println("CRAFT DAMAGE. GOOD LUCK")
+                goto_("05.90")
+            }
+        }
+    )
+
+    line(
+        "05.81",
+        'I (60-W)5.82,5.82;T "CRASH LANDING-YOU\'VE 5 HRS OXYGEN";G 5.9',
+        function* () {
+            if (60-w <= 0) {
+                goto_("05.82")
+            } else {
+                out.println("CRASH LANDING-YOU\'VE 5 HRS OXYGEN")
+                goto_("05.90")
+            }
+        }
+    )
+
+    line(
+        "05.82",
+        'T "SORRY,BUT THERE WERE NO SURVIVORS-YOU BLEW IT!"!"IN "',
+        function* () {
+            out.println("SORRY,BUT THERE WERE NO SURVIVORS-YOU BLEW IT!")
+            out.print("IN ")
+        }
+    )
+
+    line(
+        "05.83",
+        'T "FACT YOU BLASTED A NEW LUNAR CRATER"W*.277777," FT. DEEP"!',
+        function* () {
+            out.print("FACT YOU BLASTED A NEW LUNAR CRATER")
+            type(w*.277777)
+            out.println(" FT. DEEP")
+        }
+    )
+
+    line(
+        "05.90",
+        'T !!!!"TRY AGAIN?"!',
+        function* () {
+            out.println()
+            out.println()
+            out.println()
+            out.println()
+            out.println("TRY AGAIN?")
+        }
+    )
+
+    line(
+        "05.92",
+        'A "(ANS. YES OR NO)"P;I (P-0NO)5.94,5.98',
+        function* () {
+            out.print("(ANS. YES OR NO):")
+            yield result
+            p = result.input.toUpperCase()
+            if (p === 'NO') {
+                goto_("05.98")
+            } else {
+                goto_("05.94")
+            }
+        }
+    )
+
+    line(
+        "05.94",
+        'I (P-0YES)5.92,1.2,5.92',
+        function* () {
+            if (p === 'YES') {
+                goto_("01.20")
+            } else {
+                goto_("05.92")
+            }
+        }
+    )
 
     line(
         "05.98",
@@ -326,16 +495,16 @@ function *lunarLander(out) {
             out.println("CONTROL OUT")
             out.println()
             out.println()
-            return
+            done = true
         }
     )
-    
+
     line(
         "06.10",
-        'S L=L+S;S T=T-S;S M=M-S*K;S A=I;S V=J', 
+        'S L=L+S;S T=T-S;S M=M-S*K;S A=I;S V=J',
         function* () {
             l = l+s
-            t = t-s 
+            t = t-s
             m = m-s*k
             a = i
             v = j
@@ -343,17 +512,20 @@ function *lunarLander(out) {
     )
 
     line(
-        "07.10", 
+        "07.10",
         'I (S-.005)5.1;S S=2*A/(V+FSQT(V*V+2*A*(G-Z*K/M)))',
         function* () {
-            if_(s-.005, "05.10")
-            s = 2*a/(v+fsqrt(v*v+2*a*(g-z*k/m)))
+            if (s-.005 < 0) {
+                goto_("05.10")
+            } else {
+                s = 2*a/(v+fsqrt(v*v+2*a*(g-z*k/m)))
+            }
         }
     )
 
     line(
         "07.30",
-        'D 9;D 6;G 7.1', 
+        'D 9;D 6;G 7.1',
         function* () {
             yield* do_("09.10", "09.40")
             yield* do_("06.10", "06.10")
@@ -369,8 +541,8 @@ function *lunarLander(out) {
     // copied as-is into C: `Z * K` has to be parenthesized to
     // get the same result.
     line(
-        "08.10", 
-        'S W=(1-M*G/(Z*K))/2;S S=M*V/(Z*K*(W+FSQT(W*W+V/Z)))+.05;D 9', 
+        "08.10",
+        'S W=(1-M*G/(Z*K))/2;S S=M*V/(Z*K*(W+FSQT(W*W+V/Z)))+.05;D 9',
         function* () {
             w = (1-m*g/(z*k))/2;
             s = m*v/(z*k*(w+fsqrt(w*w+v/z)))+ 0.5;
@@ -380,12 +552,20 @@ function *lunarLander(out) {
 
     line(
         "08.30",
-        'I (I)7.1,7.1;D 6;I (-J)3.1,3.1;I (V)3.1,3.1,8.1', 
+        'I (I)7.1,7.1;D 6;I (-J)3.1,3.1;I (V)3.1,3.1,8.1',
         function* () {
-            if_(i, "07.1", "07.1")
-            yield* do_("06.10", "06.10")
-            if_(-j, "03.10", "03.10")
-            if_(v, "03.10", "03.10", "08.10")
+            if (i <= 0) {
+                goto_("07.10")
+            } else {
+                yield* do_("06.10", "06.10")
+                if (-j <= 0) {
+                    goto_("03.10")
+                } else if (v <= 0) {
+                    goto_("03.10")
+                } else {
+                    goto_("08.10")
+                }
+            }
         }
     )
 
@@ -394,22 +574,22 @@ function *lunarLander(out) {
         'S Q=S*K/M;S J=V+G*S+Z*(-Q-Q^2/2-Q^3/3-Q^4/4-Q^5/5)',
         function* () {
             q = s*k/m
-            let q2 = Math.pow(q, 2) 
-            let q3 = Math.pow(q, 3) 
-            let q4 = Math.pow(q, 4) 
-            let q5 = Math.pow(q, 5) 
+            let q2 = Math.pow(q, 2)
+            let q3 = Math.pow(q, 3)
+            let q4 = Math.pow(q, 4)
+            let q5 = Math.pow(q, 5)
             j=v+g*s+z*(-q-q2/2-q3/3-q4/4-q5/5)
         }
     )
 
     line(
         "09.40",
-        'S I=A-G*S*S/2-V*S+Z*S*(Q/2+Q^2/6+Q^3/12+Q^4/20+Q^5/30)', 
+        'S I=A-G*S*S/2-V*S+Z*S*(Q/2+Q^2/6+Q^3/12+Q^4/20+Q^5/30)',
         function* () {
-            let q2 = Math.pow(q, 2) 
-            let q3 = Math.pow(q, 3) 
-            let q4 = Math.pow(q, 4) 
-            let q5 = Math.pow(q, 5) 
+            let q2 = Math.pow(q, 2)
+            let q3 = Math.pow(q, 3)
+            let q4 = Math.pow(q, 4)
+            let q5 = Math.pow(q, 5)
             i = a-g*s*s/2-v*s+z*s*(q/2+q2/6+q3/12+q4/20+q5/30)
         }
     )
