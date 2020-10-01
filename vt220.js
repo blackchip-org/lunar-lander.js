@@ -30,8 +30,8 @@ window.onload = function() {
             return 
         }
         display.input((line) => {
-            result.input = line
-            console.log('INPUT', line) 
+            console.log('*** INPUT', line) 
+            result.value.input = line
             process() 
         })
     }

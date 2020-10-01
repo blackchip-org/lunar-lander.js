@@ -8,7 +8,9 @@ function *lunarLander(out) {
 
     // external process sets this value when input is required from 
     // the user 
-    let input = '';
+    let result = {
+        input: ''
+    };
 
     // full program as objects containing line numbers, remarks, functions
     let code = []
@@ -38,10 +40,14 @@ function *lunarLander(out) {
         goto_(start)
         while (true) {  
             let op = code[pc]
-            if (exec > 10000) {
+            if (exec > 1000) {
                 throw new Error(`loop detected: ${JSON.stringify(op, null, 2)}`)
             }
-            // console.log(JSON.stringify(op, null, 2))
+            debug()
+            if (Number.isNaN(t)) {
+                throw new Error('NAN')
+            }
+            console.log(JSON.stringify(op, null, 2))
             exec++
             pc++
             yield* op.fn()
@@ -77,25 +83,28 @@ function *lunarLander(out) {
         }
     }
 
-    function pow(a, b) {
-        return Math.pow(a, b) 
-    }
-
     function type(v) {
         let s = v.toFixed(fmt.places) 
         out.print(s.toString().padStart(fmt.total + 1, " "))
     }
 
     let a = 0
-    let v = 0 
-    let m = 0
-    let n = 0
     let g = 0
-    let z = 0 
-    let l = 0 
-    let s = 0
     let i = 0
     let j = 0
+    let k = 0
+    let l = 0 
+    let m = 0
+    let n = 0
+    let s = 0
+    let t = 0
+    let v = 0 
+    let z = 0 
+
+    function debug() {
+        let vars = {a, g, i, j, k, l, m, n, s, t, v, z}
+        console.log(JSON.stringify(vars, null, 2))
+    }
 
     line(
         "01.04", 
@@ -198,8 +207,8 @@ function *lunarLander(out) {
             fmt.places = 1 
             type(m - n)
             out.print("      K=:")
-            yield input
-            k = input
+            yield result
+            k = Number.parseFloat(result.input)
             t = 10
         }
     )
@@ -232,8 +241,8 @@ function *lunarLander(out) {
         'T "K=";A K;G 2.7"',
         function* () {
             out.print("K=")
-            yield input
-            k = input
+            yield result
+            k = Number.passeFloat(result.input)
             goto_("02.70")
         }
     )
@@ -242,8 +251,8 @@ function *lunarLander(out) {
         "03.10",
         'I (M-N-.001)4.1;I (T-.001)2.1;S S=T',
         function* () {
-            if_(m - n - .001, "04.10")
-            if_(t - .001, "02.10")
+            if_(m-n-.001, "04.10")
+            if_(t-.001, "02.10")
             s = t
         }
     )
@@ -252,8 +261,8 @@ function *lunarLander(out) {
         "03.40",
         'I ((N+S*K)-M)3.5,3.5;S S=(M-N)/K',
         function* () {
-            if_((n + s * k) - m, "03.50", "03.50")
-            s = (m - n) / k
+            if_((n+s*k)-m, "03.50", "03.50")
+            s = (m-n)/k
         }
     )
 
@@ -352,12 +361,19 @@ function *lunarLander(out) {
         }
     )
 
+    // https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
+    // FOCAL-to-C gotcha: In FOCAL, multiplication has a higher
+    // precedence than division.  In C, they have the same
+    // precedence and are evaluated left-to-right.  So the
+    // original FOCAL subexpression `M * G / Z * K` can't be
+    // copied as-is into C: `Z * K` has to be parenthesized to
+    // get the same result.
     line(
         "08.10", 
         'S W=(1-M*G/(Z*K))/2;S S=M*V/(Z*K*(W+FSQT(W*W+V/Z)))+.05;D 9', 
         function* () {
-            w = (1-m*g/(z*k))/2
-            s = m*v/(z*k*(w+fsqrt(w*w+v/z)))+.05
+            w = (1-m*g/(z*k))/2;
+            s = m*v/(z*k*(w+fsqrt(w*w+v/z)))+ 0.5;
             yield* do_("09.10", "09.40")
         }
     )
@@ -378,7 +394,11 @@ function *lunarLander(out) {
         'S Q=S*K/M;S J=V+G*S+Z*(-Q-Q^2/2-Q^3/3-Q^4/4-Q^5/5)',
         function* () {
             q = s*k/m
-            j=v+g*s+z*(-q-pow(q,2)/2-pow(q,3)/3-pow(q,4)/4-pow(q,5)/5)
+            let q2 = Math.pow(q, 2) 
+            let q3 = Math.pow(q, 3) 
+            let q4 = Math.pow(q, 4) 
+            let q5 = Math.pow(q, 5) 
+            j=v+g*s+z*(-q-q2/2-q3/3-q4/4-q5/5)
         }
     )
 
@@ -386,7 +406,11 @@ function *lunarLander(out) {
         "09.40",
         'S I=A-G*S*S/2-V*S+Z*S*(Q/2+Q^2/6+Q^3/12+Q^4/20+Q^5/30)', 
         function* () {
-            i = a-g*s*s/2-v*s+z*s*(q/2+pow(q,2)/6+pow(q,3)/12+pow(q,4)/20+pow(q,5)/30)
+            let q2 = Math.pow(q, 2) 
+            let q3 = Math.pow(q, 3) 
+            let q4 = Math.pow(q, 4) 
+            let q5 = Math.pow(q, 5) 
+            i = a-g*s*s/2-v*s+z*s*(q/2+q2/6+q3/12+q4/20+q5/30)
         }
     )
 
