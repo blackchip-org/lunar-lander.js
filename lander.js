@@ -187,6 +187,7 @@ function *lunarLander(out) {
         "01.50",
         'S A=120;S V=1;S M=32500;S N=16500;S G=.001;S Z=1.8',
         function* () {
+            // FIXME: broken when replay selected
             a = a || 120
             v = v || 1
             m = m || 32500
