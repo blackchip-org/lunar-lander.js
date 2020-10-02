@@ -1,17 +1,6 @@
 // C-FOCAL,1969
 function *lunarLander(out) {
 
-    out = out || {
-        println: console.log,
-        print: (x) => process.stdout.write(x)
-    }
-
-    // external process sets this value when input is required from
-    // the user
-    let result = {
-        input: ''
-    };
-
     // full program as objects containing line numbers, remarks, functions
     let code = []
 
@@ -29,25 +18,42 @@ function *lunarLander(out) {
         places: 4
     }
 
+    // external process sets this value when input is required from
+    // the user
+    let result = {
+        input: ''
+    };
+
+    // number of lines executed (for help in stopping infinite loops early)
     let exec = 0
+
+    // set to true after initializing via query string 
+    let init = false 
+
+    // set to true when it is time to terminate the program
     let done = false
 
+    // add a line to the program with line number, 'num', the original 
+    // source in the remark, 'rem', and the function 'fn', to execute. 
     function line(num, rem, fn) {
         lines[num] = code.length
         code.push({ num, rem, fn })
     }
 
+    // FOCAL DO command. Execute block of code from the line number starting
+    // with 'start' and ending with 'end'. FOCAL doesn't have an end, this 
+    // is here due to pure laziness as it is easier to implement.  
     function* do_(start, end) {
         let prev = pc
         goto_(start)
         while (!done) {
             let op = code[pc]
             let execLineNum = op.num
-            if (exec > 1000) {
-                throw new Error(`loop detected: ${JSON.stringify(op, null, 2)}`)
+            if (exec > 10000) {
+                throw new Error(`execution limit exceeded: ${JSON.stringify(op, null, 2)}`)
             }
-            // debug()
-            // console.log(JSON.stringify(op, null, 2))
+            debug()
+            console.log(`${op.num} ${op.rem}`)
             exec++
             pc++
             yield* op.fn()
@@ -58,15 +64,18 @@ function *lunarLander(out) {
         }
     }
 
-    // The integer part function (FITR) outputs the integer part of a number up to 2046
+    // FOCAL FITR function: the integer part function outputs the integer 
+    // part of a number up to 2046
     function fitr(x) {
         return Math.trunc(x)
     }
 
+    // FOCAL FSQRT function: Square root
     function fsqrt(x) {
         return Math.sqrt(x)
     }
 
+    // FOCAL GOTO statement
     function goto_(num) {
         if (!(num in lines)) {
             throw new Error(`no such line: ${num}`)
@@ -74,21 +83,14 @@ function *lunarLander(out) {
         pc = lines[num]
     }
 
+    // FOCAL TYPE statement. Only intended for numeric values that need
+    // to have formatting applied
     function type(v) {
         let s = v.toFixed(fmt.places)
         out.print(s.toString().padStart(fmt.total + 1, " "))
     }
 
-    function param(name) {
-        let params = new URLSearchParams(window.location.search);
-        let str = params.get(name)
-        if (str) {
-            return Number.parseFloat(str)
-        }
-        return 0
-    }
-
-    //https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
+    // From https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
     // Global variables
     //
     // A - Altitude (miles)
@@ -104,18 +106,18 @@ function *lunarLander(out) {
     // V - Downward speed (miles/sec)
     // W - Temporary working variable
     // Z - Thrust per pound of fuel burned
-    let a = param("a")
+    let a = 0
     let g = 0
     let i = 0
     let j = 0
     let k = 0
-    let l = param("l")
-    let m = 16500 + param("mn")
+    let l = 0
+    let m = 0
     let n = 0
-    let p = '' // try again?
+    let p = '' // try again result
     let s = 0
     let t = 0
-    let v = param("v"); if (v) { v = v / 3600 }
+    let v = 0
     let w = 0
     let z = 0
 
@@ -187,13 +189,38 @@ function *lunarLander(out) {
         "01.50",
         'S A=120;S V=1;S M=32500;S N=16500;S G=.001;S Z=1.8',
         function* () {
-            // FIXME: broken when replay selected
-            a = a || 120
-            v = v || 1
-            m = m || 32500
+            a = 120
+            v = 1
+            m = 32500
             n = 16500
             g = .001
             z = 1.8
+
+            // Variables assumed to be zero do not seem to get initialized
+            // when the game is replayed. 
+            l = 0
+
+            // Initialize with query string if provided
+            if (!init) {
+                let params = new URLSearchParams(window.location.search);
+                let pa = params.get("a")
+                if (pa) {
+                    a = Number.parseFloat(pa) 
+                }
+                let pl = params.get("l")
+                if (pl) {
+                    l = Number.parseFloat(pl)
+                }
+                let pf = params.get("f")
+                if (pf) {
+                    m = 16500 + Number.parseFloat(pf)
+                }
+                let pv = params.get("v")
+                if (pv) {
+                    v = Number.parseFloat(pv) / 3600
+                }                
+            }
+            init = true
         }
     )
 
@@ -265,7 +292,7 @@ function *lunarLander(out) {
         "02.73",
         'T "K=";A K;G 2.7"',
         function* () {
-            out.print("K=")
+            out.print("K=:")
             yield result
             k = Number.parseFloat(result.input)
             goto_("02.70")
@@ -361,7 +388,12 @@ function *lunarLander(out) {
             type(w)
             out.println(" M.P.H.")
             out.print("FUEL LEFT:")
-            type(m-n)
+            let f = m-n 
+            // Is there ever a check to see if fuel is below zero?
+            if (f < 0) {
+                f = 0
+            }
+            type(f)
             out.println(" LBS")
         }
     )
@@ -534,7 +566,7 @@ function *lunarLander(out) {
         }
     )
 
-    // https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
+    // From: https://www.cs.brandeis.edu/~storer/LunarLander/LunarLanderTranslations/LunarLanderJohnsonTranslation-c.txt
     // FOCAL-to-C gotcha: In FOCAL, multiplication has a higher
     // precedence than division.  In C, they have the same
     // precedence and are evaluated left-to-right.  So the

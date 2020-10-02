@@ -1,1 +1,24 @@
-?l=220&a=0.0179924&v=11.10&mn=30
+// Perfect
+// 8 
+http://localhost:8000/?l=220&a=0.0001&v=0.01&f=300
+
+// Good landing
+// 8, 8 
+http://localhost:8000/?l=220&a=0.0109924&v=0.01&f=300
+
+// Poor landing
+// 100
+http://localhost:8000?l=220&a=0.0179924&v=11.10&f=30
+
+// Craft damage
+// 0 
+http://localhost:8000/?l=220&a=0.0179924&v=11.10&f=30
+
+// Crash landing 
+// 0 
+http://localhost:8000/?l=220&a=0.0179924&v=35.10&f=30
+
+// Blew it
+// 0 
+http://localhost:8000/?l=220&a=0.0179924&v=125.10&f=30
+

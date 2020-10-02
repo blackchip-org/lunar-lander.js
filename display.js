@@ -1,4 +1,3 @@
-
 var createDisplay = function(options) {
 
     options = options || {};

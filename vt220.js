@@ -22,6 +22,11 @@ window.onload = function() {
         print: display.print
     }
 
+    display.println("LUNAR LANDER BY JIM STORER")
+    display.println("FOCAL,1969")
+    display.println()
+    display.println()
+    
     let exec = lunarLander(output)
 
     let process = function() {
