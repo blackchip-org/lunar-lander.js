@@ -52,7 +52,7 @@ https://github.com/blackchip-org/retro-display
 For optimal fun the original source was translated line by line, in all of its
 goto glory, instead of being restructured into a modern form. I think I found
 two bugs in the original source and have corrected them here. Or it is my lack
-of expertise in the FOCAL programming language that make me think they are
+of expertise in the FOCAL programming language that makes me think they are
 bugs. Otherwise, this version tries to adhere to the original as much as
 possible. Future plans may include adding more precision errors.
 
