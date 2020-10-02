@@ -72,7 +72,7 @@ Use the following query string parameters to "cheat":
 
 Example: https://blackchip.org/lunar-lander/?l=220&a=0.0001&v=0.01&f=300
 
-Input values not checked. 
+Input values are not checked. 
 
 THIS GAME IS PROVIDED "AS-IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO LOSS OF OXYGEN, LOSS OF SPACE VEHICLE,
