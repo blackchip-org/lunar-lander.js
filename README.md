@@ -2,7 +2,7 @@
 C-FOCAL,1969
 ```
 
-# lunar-lander
+# lunar-lander.js
 
 The original Lunar Lander from 1969 by Jim Storer. Translated, for fun, for use in the web browser. 
 
