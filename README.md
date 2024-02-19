@@ -4,11 +4,11 @@ C-FOCAL,1969
 
 # lunar-lander.js
 
-The original Lunar Lander from 1969 by Jim Storer. Translated, for fun, for use in the web browser. 
+The original Lunar Lander from 1969 by Jim Storer. Translated, for fun, for use in the web browser.
 
 Play it live here:
 
-https://blackchip.org/lunar-lander
+https://blackchip-org.github.io/lunar-lander.js
 
 ## References
 
@@ -16,7 +16,7 @@ Original source code obtained from:
 
 https://www.cs.brandeis.edu/~storer/LunarLander/LunarLander.html
 
-FOCAL Programming Manual was obtained from: 
+FOCAL Programming Manual was obtained from:
 
 http://www.bitsavers.org/www.computer.museum.uq.edu.au/pdf/DEC-08-AJAB-D%20PDP-8-I%20FOCAL%20Programming%20Manual.pdf
 
@@ -57,28 +57,28 @@ bugs. Otherwise, this version tries to adhere to the original as much as
 possible. Future plans may include adding more precision errors.
 
 I wanted to add a typing effect to the display but this is JavaScript. To
-add a short sleep between characters requires restructuring the whole 
+add a short sleep between characters requires restructuring the whole
 program. They don't make them like they used to.
 
-Open the web console in the browser if you would like to see the execution 
-trace of the FOCAL commands and the state of the variables as they change. 
+Open the web console in the browser if you would like to see the execution
+trace of the FOCAL commands and the state of the variables as they change.
 
-Use the following query string parameters to "cheat": 
+Use the following query string parameters to "cheat":
 
 - `a`: altitude
 - `l`: elapsed time
-- `f`: remaining fuel 
+- `f`: remaining fuel
 - `v`: velocity
 
 Example: https://blackchip.org/lunar-lander/?l=220&a=0.0001&v=0.01&f=300
 
-Input values are not checked. 
+Input values are not checked.
 
 THIS GAME IS PROVIDED "AS-IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO LOSS OF OXYGEN, LOSS OF SPACE VEHICLE,
 AND LIABILITY DUE TO DAMAGES INCURRED DURING SURFACE IMPACT.
 
-## Development 
+## Development
 
 If you really want to start a web server and run the game locally:
 
